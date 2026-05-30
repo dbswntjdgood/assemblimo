@@ -156,23 +156,27 @@ if st.session_state.phase == 'input':
     with col1:
         num_input = st.number_input("10진법 정수 입력", min_value=0, value=27, step=1)
     with col2:
-        # max_value=150 설정을 통해 입력창 자체에서도 제한을 걸어둡니다.
+        # 1. 입력창 자체의 최대치를 50으로 조절 (마우스 클릭으로 올릴 때 50에서 멈춤)
         steps_input = st.number_input("계산할 스텝 수", min_value=1, max_value=50, value=20, step=1)
         
-    # --- [핵심] 스텝 수 한계치 검사 및 조건문 설정 ---
+    # --- 스텝 수 검사 수치를 50으로 변경 ---
     is_over_limit = steps_input > 50
     
     if is_over_limit:
-        st.warning("스텝 수 제한 초과: 브라우저 과부하와 대형 연산 오류를 방지하기 위해 최대 50스텝까지만 계산할 수 있습니다. 값을 낮춰주세요.")
+        st.error("🚨 **스텝 수 제한 초과:** 안정적인 시각화를 위해 최대 **50스텝**까지만 연산 가능합니다. 입력창에 값을 적은 후 **반드시 엔터(Enter)**를 눌러주세요!")
     else:
-        st.info("Tip: 숫자가 커질수록 연산 공간이 늘어나므로 적절한 스텝 수를 입력하는 것이 좋습니다.")
+        st.info("💡 Tip: 숫자가 커질수록 연산 공간이 늘어나므로 적절한 스텝 수를 입력하는 것이 좋습니다.")
 
-    # [수정] 중복 버튼 에러 원천 차단! 버튼은 단 하나만 두고, disabled 속성만 유연하게 바꿉니다.
+    # 2. [이중 잠금] 50을 초과하고 엔터를 치면 버튼이 즉시 회색(disabled)으로 잠김
     if st.button("실행", use_container_width=True, disabled=is_over_limit):
-        st.session_state.num = num_input
-        st.session_state.steps = steps_input
-        st.session_state.phase = 'conversion'
-        st.rerun()
+        # 3. 엔터를 안 치고 무작정 버튼부터 눌렀을 때를 대비한 최종 방어벽
+        if num_input is not None and steps_input > 50:
+            st.error("스텝 수를 50 이하로 조절하고 엔터를 눌러 확정해 주세요.")
+        else:
+            st.session_state.num = num_input
+            st.session_state.steps = steps_input
+            st.session_state.phase = 'conversion'
+            st.rerun()
 
 elif st.session_state.phase == 'conversion':
     # 6진수 변환 화면
