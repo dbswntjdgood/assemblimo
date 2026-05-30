@@ -154,7 +154,7 @@ if st.session_state.phase == 'input':
     
     col1, col2 = st.columns(2)
     with col1:
-        num_input = st.number_input("10진법 정수 입력", min_value=0, value=27, step=1)
+        num_input = st.number_input("10진법 정수 입력", min_value=0, value=9, step=1)
     with col2:
         steps_input = st.number_input("계산할 스텝 수", min_value=1, value=20, step=1)
         
