@@ -187,9 +187,9 @@ elif st.session_state.phase == 'ca_run':
     # 애니메이션이 렌더링될 빈 컨테이너 생성
     ca_container = st.empty()
     
-    # 내부 연산용 리스트 초기화 (왼쪽 100칸, 오른쪽 20칸 패딩으로 IndexError 원천 차단)
-    base6_list = to_base6_list(st.session_state.num)
-    state = [0] * 130 + base6_list + ['x'] + [0] * 2
+    # [수정] 100스텝 이상의 대형 연산도 버틸 수 있도록 왼쪽 패딩을 500칸으로 대폭 확장합니다.
+    window = state[100:] 
+    state = [0] * 500 + base6_list + ['x'] + [0] * 2
     
     steps = st.session_state.steps
     accumulated_html = ""
@@ -210,9 +210,10 @@ elif st.session_state.phase == 'ca_run':
         if len(state) - x_idx < 3:
             state = state + [0] * 2
             
-        # [수정] 늘어난 왼쪽 패딩을 고려해 앞의 100칸을 잘라내고, 
-        # 오른쪽은 소수점 뒤의 2칸 패딩까지 전부 잘림 없이 시각화에 포함합니다.
-        window = state[100:] 
+        # [수정] 숫자가 왼쪽으로 아무리 커져도 절대 잘리지 않도록, 
+        # 현재 소수점(x_idx) 위치를 기준으로 왼쪽으로 45칸, 오른쪽으로 끝까지(2칸) 유연하게 잘라옵니다.
+        start_view = max(0, x_idx - 45)
+        window = state[start_view:]
         
         # HTML 렌더링을 위한 태그 생성
         row_html = '<div class="ca-row">'
@@ -248,8 +249,12 @@ elif st.session_state.phase == 'ca_run':
                         behavior: 'smooth'
                     });
                 }
-                // 세로 페이지 스크롤도 새로운 행이 나올 때마다 맨 아래로 부드럽게 내려줌
-                parent.window.scrollTo({ top: parent.document.body.scrollHeight, behavior: 'smooth' });
+                // [수정] 최상위 브라우저 창(window.top)과 부모 창 모두를 타겟팅하여 세로 스크롤을 확실하게 맨 아래로 내려줍니다.
+                var targetWindow = window.top || parent;
+                targetWindow.scrollTo({ 
+                    top: targetWindow.document.body.scrollHeight || targetWindow.document.documentElement.scrollHeight, 
+                    behavior: 'smooth' 
+                });
             }
             </script>
             """,
