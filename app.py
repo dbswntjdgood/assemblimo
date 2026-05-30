@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import time
 
 # --- 1. 페이지 및 전역 CSS 설정 ---
@@ -224,37 +225,37 @@ elif st.session_state.phase == 'ca_run':
         
         accumulated_html += row_html
         
-# 전체 누적 HTML을 가로 스크롤 컨테이너(scroll-container)로 감싸서 출력
-        # [수정] 자바스크립트가 가장 최신 행의 소수점을 찾을 수 있도록 고유 ID나 구조를 유지합니다.
+# 1. 전체 누적 HTML을 가로 스크롤 컨테이너로 감싸서 마크다운으로 렌더링
         full_wrapped_html = f'<div class="scroll-container" id="ca-scroll-box">{accumulated_html}</div>'
+        ca_container.markdown(full_wrapped_html, unsafe_allow_html=True)
         
-        # [추가] 화면이 렌더링된 후, 가장 마지막에 생긴 소수점 셀(.cell-x)을 찾아서 
-        # 그 셀이 스크롤 박스 안에서 수평 중앙(또는 해당 위치)에 오도록 부드럽게 스크롤하는 스크립트 주입
-        scroll_script = """
-        <script>
-        setTimeout(() => {
-            var scrollBox = document.getElementById('ca-scroll-box');
+        # 2. 스트림릿 보안(XSS 제한)을 우회하여 브라우저에 스크롤 명령을 강제로 주입 (유령 iframe 활용)
+        components.html(
+            """
+            <script>
+            // 스트림릿 메인 창(parent)의 DOM에 직접 침투하여 스크롤 박스를 가져옵니다.
+            var scrollBox = parent.document.getElementById('ca-scroll-box');
             if (scrollBox) {
-                // 가장 최근(맨 아래)에 추가된 소수점 셀을 찾음
+                // 화면에 생성된 모든 소수점 셀(.cell-x) 리스트를 확보
                 var cells = scrollBox.getElementsByClassName('cell-x');
                 if (cells.length > 0) {
+                    // 가장 마지막 행에 등장한 최신 소수점 셀 선택
                     var lastCell = cells[cells.length - 1];
                     
-                    // 소수점 셀의 위치로 부드럽게 가로 스크롤 이동 (behavior: 'smooth')
+                    // 소수점 셀이 화면의 가로 중앙에 오도록 스크롤바 위치를 부드럽게 땡겨줌
                     scrollBox.scrollTo({
                         left: lastCell.offsetLeft - (scrollBox.clientWidth / 2) + (lastCell.clientWidth / 2),
                         behavior: 'smooth'
                     });
                 }
-                // 세로 스크롤도 항상 맨 아래로 내려가도록 처리
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                // 세로 페이지 스크롤도 새로운 행이 나올 때마다 맨 아래로 부드럽게 내려줌
+                parent.window.scrollTo({ top: parent.document.body.scrollHeight, behavior: 'smooth' });
             }
-        }, 50); // 렌더링 안정성을 위한 미세한 딜레이
-        </script>
-        """
-        
-        # HTML과 스크립트를 동시에 렌더링
-        ca_container.markdown(full_wrapped_html + scroll_script, unsafe_allow_html=True)
+            </script>
+            """,
+            height=0,  # 화면을 차지하지 않도록 높이를 0으로 숨김
+            width=0    # 너비도 0으로 숨김
+        )
         
         # 다음 스텝 계산 전에 0.3초 대기 (마지막 스텝 제외)
         if step < steps:
