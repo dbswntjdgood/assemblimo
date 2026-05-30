@@ -16,11 +16,38 @@ custom_css = """
     background-color: transparent;
 }
 
+/* 가로 스크롤을 지원하는 컨테이너 */
+.scroll-container {
+    width: 100%;
+    overflow-x: auto; /* 가로 내용이 넘치면 스크롤바 생성 */
+    white-space: nowrap;
+    padding-bottom: 15px;
+}
+
+@keyframes jellyAppear {
+    0% {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(15deg); /* 살짝 커졌다가 회전 */
+    }
+    70% {
+        transform: scale(0.9) rotate(-5deg); /* 살짝 수축 */
+    }
+    100% {
+        transform: scale(1) rotate(0deg);    /* 원래대로 */
+        opacity: 1;
+    }
+}
+
+
 /* CA 행 컨테이너 (가운데 정렬, 셀 높이의 반인 20px 마진) */
 .ca-row {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     margin-bottom: 20px;
+    padding: 10px;
 }
 
 /* 개별 셀 기본 스타일 */
@@ -37,6 +64,9 @@ custom_css = """
     font-weight: bold;
     font-family: monospace;
     color: black;
+    /* 0.4초 동안 젤리 효과 실행 */
+    animation: jellyAppear 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    flex-shrink: 0; /* 셀 크기가 찌그러지지 않도록 고정 */
 }
 
 /* 숫자 셀 색상 그라데이션 */
@@ -164,11 +194,9 @@ elif st.session_state.phase == 'ca_run':
         if len(state) - x_idx < 10:
             state = state + [0] * 20
             
-        # 카메라 슬라이싱 로직 (왼쪽 12칸, 본인 1칸, 오른쪽 2칸 = 총 15칸)
-        start_idx = x_idx - 12
-        end_idx = x_idx + 3
-        
-        window = state[start_idx:end_idx]
+        # [수정] 소수점 기준 고정을 해제하고, 소수점이 이동할 수 있도록 넓은 고정 범위를 슬라이싱
+        # 앞쪽 패딩 70칸을 걷어내고 뒤쪽 10칸을 제외한 약 40~50칸의 넓은 공간을 화면에 보여줍니다.
+        window = state[70:-10] 
         
         # HTML 렌더링을 위한 태그 생성
         row_html = '<div class="ca-row">'
@@ -181,10 +209,11 @@ elif st.session_state.phase == 'ca_run':
         
         accumulated_html += row_html
         
-        # 전체 누적 HTML을 부분 렌더링
-        ca_container.markdown(f'<div>{accumulated_html}</div>', unsafe_allow_html=True)
+        # [수정] 전체 누적 행들을 가로 스크롤이 가능한 컨테이너(scroll-container)로 감싸서 출력
+        full_wrapped_html = f'<div class="scroll-container">{accumulated_html}</div>'
+        ca_container.markdown(full_wrapped_html, unsafe_allow_html=True)
         
         # 다음 스텝 계산 전에 0.5초 대기 (마지막 스텝 제외)
         if step < steps:
-            time.sleep(0.1)
+            time.sleep(0.3)
             state = collatz_ca_step(state)
