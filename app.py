@@ -158,7 +158,19 @@ if st.session_state.phase == 'input':
     with col2:
         # max_value=150 을 추가하여 최대 입력 가능한 스텝 수를 제한합니다.
         steps_input = st.number_input("계산할 스텝 수", min_value=1, max_value=50, value=20, step=1)
-        st.caption("최대 50스텝까지 제한")        
+        st.caption("최대 50스텝까지 제한")
+    # --- [추가] 스텝 수 초과 검사 및 경고 메시지 로직 ---
+    is_over_limit = steps_input > 150
+    
+    if is_over_limit:
+        st.warning("스텝 수 제한 초과: 브라우저 버벅임과 오류를 방지하기 위해 최대 50스텝까지만 계산할 수 있습니다. 값을 낮춰주세요.")
+    # 경고 상태일 때는 버튼을 누르지 못하도록 disabled 설정을 걸어둠
+    if st.button("실행", use_container_width=True, disabled=is_over_limit):
+        st.session_state.num = num_input
+        st.session_state.steps = steps_input
+        st.session_state.phase = 'conversion'
+        st.rerun()
+        
     if st.button("실행", use_container_width=True):
         st.session_state.num = num_input
         st.session_state.steps = steps_input
