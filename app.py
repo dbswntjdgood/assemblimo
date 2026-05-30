@@ -188,7 +188,7 @@ elif st.session_state.phase == 'ca_run':
     ca_container = st.empty()
     
     # [수정] 100스텝 이상의 대형 연산도 버틸 수 있도록 왼쪽 패딩을 500칸으로 대폭 확장합니다.
-    window = state[100:] 
+    base6_list = to_base6_list(st.session_state.num)
     state = [0] * 500 + base6_list + ['x'] + [0] * 2
     
     steps = st.session_state.steps
