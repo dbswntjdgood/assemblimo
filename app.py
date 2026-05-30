@@ -212,11 +212,11 @@ elif st.session_state.phase == 'ca_run':
         if len(state) - x_idx < 3:
             state = state + [0] * 2
             
-        # [수정] 소수점(x_idx)을 기준으로 왼쪽은 넉넉히 45칸, 오른쪽은 딱 '소수점 포함 3칸'만 잘라옵니다.
-        # 이렇게 하면 소수점 오른쪽에 숨어있던 무의미한 0 패딩들이 화면에서 완전히 가려집니다!
-        start_view = max(0, x_idx - 45)
-        end_view = x_idx + 3
-        window = state[start_view:end_view]
+
+        # [수정] 소수점 기준 고정을 완전히 해제합니다.
+        # 초기 500칸의 패딩 중 의미 없는 앞쪽 350칸만 잘라내고, 나머지는 통째로 화면에 출력하여 
+        # 소수점이 실제로 왼쪽, 오른쪽으로 이동하는 모습을 정적 구조 안에 그대로 노출시킵니다.
+        window = state[350:]
         
         # HTML 렌더링을 위한 태그 생성
         row_html = '<div class="ca-row">'
@@ -234,24 +234,27 @@ elif st.session_state.phase == 'ca_run':
         ca_container.markdown(full_wrapped_html, unsafe_allow_html=True)
         
         # 2. 스트림릿 보안(XSS 제한)을 우회하여 브라우저에 스크롤 명령을 강제로 주입 (유령 iframe 활용)
-# 2. 스트림릿 보안을 우회하여 브라우저에 스크롤 명령 강제 주입 (가로/세로 동시 무빙 버전)
+        # 2. 스트림릿 보안 우회 및 가로/세로 추적 스크롤 (초기 우측 고정 기능 추가)
         components.html(
-            """
+            f"""
             <script>
             var scrollBox = parent.document.getElementById('ca-scroll-box');
-            if (scrollBox) {
+            if (scrollBox) {{
                 var cells = scrollBox.getElementsByClassName('cell-x');
-                if (cells.length > 0) {
+                if (cells.length > 0) {{
                     var lastCell = cells[cells.length - 1];
                     
-                    // [핵심 수정] 가로(left) 좌표와 세로(top) 좌표 이동 명령을 하나의 딕셔너리로 묶어서 동시에 쏩니다.
-                    scrollBox.scrollTo({
+                    // 현재 스텝이 0(첫 시작)일 때는 부드러운 효과 없이 즉시 맨 오른쪽 소수점 위치로 카메라를 고정합니다.
+                    var scrollBehavior = '{'instant' if step == 0 else 'smooth'}';
+                    
+                    // 소수점 셀이 스크롤 박스의 중앙에 오도록 가로/세로 동시 스크롤 수행
+                    scrollBox.scrollTo({{
                         left: lastCell.offsetLeft - (scrollBox.clientWidth / 2) + (lastCell.clientWidth / 2),
                         top: scrollBox.scrollHeight,
-                        behavior: 'smooth'
-                    });
-                }
-            }
+                        behavior: scrollBehavior
+                    }});
+                }}
+            }}
             </script>
             """,
             height=0,
