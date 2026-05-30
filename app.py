@@ -164,6 +164,8 @@ if st.session_state.phase == 'input':
     
     if is_over_limit:
         st.warning("스텝 수 제한 초과: 브라우저 버벅임과 오류를 방지하기 위해 최대 50스텝까지만 계산할 수 있습니다. 값을 낮춰주세요.")
+    else:
+        st.info("Tip: 숫자가 커질수록 버벅임이 늘어나므로 적절한 스텝 수를 입력하는 것이 좋습니다.")
     # 경고 상태일 때는 버튼을 누르지 못하도록 disabled 설정을 걸어둠
     if st.button("실행", use_container_width=True, disabled=is_over_limit):
         st.session_state.num = num_input
