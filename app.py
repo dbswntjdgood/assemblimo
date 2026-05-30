@@ -175,7 +175,7 @@ elif st.session_state.phase == 'ca_run':
     
     # 내부 연산용 리스트 초기화 (왼쪽 100칸, 오른쪽 20칸 패딩으로 IndexError 원천 차단)
     base6_list = to_base6_list(st.session_state.num)
-    state = [0] * 100 + base6_list + ['x'] + [0] * 20
+    state = [0] * 130 + base6_list + ['x'] + [0] * 2
     
     steps = st.session_state.steps
     accumulated_html = ""
@@ -188,15 +188,17 @@ elif st.session_state.phase == 'ca_run':
             # 예외적으로 x가 사라진 경우 (규칙에 의해 0으로 소멸) 처리
             x_idx = len(state) // 2
             
-        if x_idx < 30:
+        # 왼쪽 공간이 부족해지면 50칸씩 대폭 수급
+        if x_idx < 40:
             state = [0] * 50 + state
             x_idx += 50
-        if len(state) - x_idx < 10:
-            state = state + [0] * 20
+        # 오른쪽 공간은 항상 '2칸' 근처를 유지하도록 감시 및 보충
+        if len(state) - x_idx < 3:
+            state = state + [0] * 2
             
-        # [수정] 소수점 기준 고정을 해제하고, 소수점이 이동할 수 있도록 넓은 고정 범위를 슬라이싱
-        # 앞쪽 패딩 70칸을 걷어내고 뒤쪽 10칸을 제외한 약 40~50칸의 넓은 공간을 화면에 보여줍니다.
-        window = state[70:-10] 
+        # [수정] 늘어난 왼쪽 패딩을 고려해 앞의 100칸을 잘라내고, 
+        # 오른쪽은 소수점 뒤의 2칸 패딩까지 전부 잘림 없이 시각화에 포함합니다.
+        window = state[100:] 
         
         # HTML 렌더링을 위한 태그 생성
         row_html = '<div class="ca-row">'
