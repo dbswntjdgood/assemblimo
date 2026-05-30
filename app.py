@@ -234,34 +234,28 @@ elif st.session_state.phase == 'ca_run':
         ca_container.markdown(full_wrapped_html, unsafe_allow_html=True)
         
         # 2. 스트림릿 보안(XSS 제한)을 우회하여 브라우저에 스크롤 명령을 강제로 주입 (유령 iframe 활용)
+# 2. 스트림릿 보안을 우회하여 브라우저에 스크롤 명령 강제 주입 (가로/세로 동시 무빙 버전)
         components.html(
             """
             <script>
-            // 스트림릿 메인 창(parent)의 DOM에 직접 침투하여 스크롤 박스를 가져옵니다.
             var scrollBox = parent.document.getElementById('ca-scroll-box');
             if (scrollBox) {
-                // 화면에 생성된 모든 소수점 셀(.cell-x) 리스트를 확보
                 var cells = scrollBox.getElementsByClassName('cell-x');
                 if (cells.length > 0) {
-                    // 가장 마지막 행에 등장한 최신 소수점 셀 선택
                     var lastCell = cells[cells.length - 1];
                     
-                    // 소수점 셀이 화면의 가로 중앙에 오도록 스크롤바 위치를 부드럽게 땡겨줌
+                    // [핵심 수정] 가로(left) 좌표와 세로(top) 좌표 이동 명령을 하나의 딕셔너리로 묶어서 동시에 쏩니다.
                     scrollBox.scrollTo({
                         left: lastCell.offsetLeft - (scrollBox.clientWidth / 2) + (lastCell.clientWidth / 2),
+                        top: scrollBox.scrollHeight,
                         behavior: 'smooth'
                     });
                 }
-                // [수정] 외부 창 대신, 가로 스크롤을 제어하던 scrollBox 자체의 세로 스크롤을 맨 아래로 내립니다.
-                scrollBox.scrollTo({
-                    top: scrollBox.scrollHeight,
-                    behavior: 'smooth'
-                });
             }
             </script>
             """,
-            height=0,  # 화면을 차지하지 않도록 높이를 0으로 숨김
-            width=0    # 너비도 0으로 숨김
+            height=0,
+            width=0
         )
         
         # 다음 스텝 계산 전에 0.3초 대기 (마지막 스텝 제외)
