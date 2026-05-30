@@ -20,10 +20,12 @@ custom_css = """
 /* 가로 스크롤을 지원하는 컨테이너 보완 */
 .scroll-container {
     width: 100%;
+    max-height: 70vh; /* 화면 높이의 70%만큼만 차지하도록 제한 */
     overflow-x: auto;
+    overflow-y: auto; /* [추가] 세로 스크롤도 컨테이너 내부에서 작동하도록 설정 */
     white-space: nowrap;
     padding-bottom: 15px;
-    scroll-behavior: smooth; /* CSS 차원에서도 부드러운 스크롤 지원 */
+    scroll-behavior: smooth;
 }
 
 /* (선택사항) 가로 스크롤바를 조금 더 얇고 예쁘게 만들기 */
@@ -250,11 +252,10 @@ elif st.session_state.phase == 'ca_run':
                         behavior: 'smooth'
                     });
                 }
-                // [수정] 최상위 브라우저 창(window.top)과 부모 창 모두를 타겟팅하여 세로 스크롤을 확실하게 맨 아래로 내려줍니다.
-                var targetWindow = window.top || parent;
-                targetWindow.scrollTo({ 
-                    top: targetWindow.document.body.scrollHeight || targetWindow.document.documentElement.scrollHeight, 
-                    behavior: 'smooth' 
+                // [수정] 외부 창 대신, 가로 스크롤을 제어하던 scrollBox 자체의 세로 스크롤을 맨 아래로 내립니다.
+                scrollBox.scrollTo({
+                    top: scrollBox.scrollHeight,
+                    behavior: 'smooth'
                 });
             }
             </script>
