@@ -210,10 +210,11 @@ elif st.session_state.phase == 'ca_run':
         if len(state) - x_idx < 3:
             state = state + [0] * 2
             
-        # [수정] 숫자가 왼쪽으로 아무리 커져도 절대 잘리지 않도록, 
-        # 현재 소수점(x_idx) 위치를 기준으로 왼쪽으로 45칸, 오른쪽으로 끝까지(2칸) 유연하게 잘라옵니다.
+        # [수정] 소수점(x_idx)을 기준으로 왼쪽은 넉넉히 45칸, 오른쪽은 딱 '소수점 포함 3칸'만 잘라옵니다.
+        # 이렇게 하면 소수점 오른쪽에 숨어있던 무의미한 0 패딩들이 화면에서 완전히 가려집니다!
         start_view = max(0, x_idx - 45)
-        window = state[start_view:]
+        end_view = x_idx + 3
+        window = state[start_view:end_view]
         
         # HTML 렌더링을 위한 태그 생성
         row_html = '<div class="ca-row">'
