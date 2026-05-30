@@ -16,12 +16,25 @@ custom_css = """
     background-color: transparent;
 }
 
-/* 가로 스크롤을 지원하는 컨테이너 */
+/* 가로 스크롤을 지원하는 컨테이너 보완 */
 .scroll-container {
     width: 100%;
-    overflow-x: auto; /* 가로 내용이 넘치면 스크롤바 생성 */
+    overflow-x: auto;
     white-space: nowrap;
     padding-bottom: 15px;
+    scroll-behavior: smooth; /* CSS 차원에서도 부드러운 스크롤 지원 */
+}
+
+/* (선택사항) 가로 스크롤바를 조금 더 얇고 예쁘게 만들기 */
+.scroll-container::-webkit-scrollbar {
+    height: 6px;
+}
+.scroll-container::-webkit-scrollbar-thumb {
+    background: #FF1493; /* 소수점 색상과 맞춘 핫핑크 얇은 바 */
+    border-radius: 4px;
+}
+.scroll-container::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 @keyframes jellyAppear {
@@ -211,11 +224,39 @@ elif st.session_state.phase == 'ca_run':
         
         accumulated_html += row_html
         
-        # [수정] 전체 누적 행들을 가로 스크롤이 가능한 컨테이너(scroll-container)로 감싸서 출력
-        full_wrapped_html = f'<div class="scroll-container">{accumulated_html}</div>'
-        ca_container.markdown(full_wrapped_html, unsafe_allow_html=True)
+# 전체 누적 HTML을 가로 스크롤 컨테이너(scroll-container)로 감싸서 출력
+        # [수정] 자바스크립트가 가장 최신 행의 소수점을 찾을 수 있도록 고유 ID나 구조를 유지합니다.
+        full_wrapped_html = f'<div class="scroll-container" id="ca-scroll-box">{accumulated_html}</div>'
         
-        # 다음 스텝 계산 전에 0.5초 대기 (마지막 스텝 제외)
+        # [추가] 화면이 렌더링된 후, 가장 마지막에 생긴 소수점 셀(.cell-x)을 찾아서 
+        # 그 셀이 스크롤 박스 안에서 수평 중앙(또는 해당 위치)에 오도록 부드럽게 스크롤하는 스크립트 주입
+        scroll_script = """
+        <script>
+        setTimeout(() => {
+            var scrollBox = document.getElementById('ca-scroll-box');
+            if (scrollBox) {
+                // 가장 최근(맨 아래)에 추가된 소수점 셀을 찾음
+                var cells = scrollBox.getElementsByClassName('cell-x');
+                if (cells.length > 0) {
+                    var lastCell = cells[cells.length - 1];
+                    
+                    // 소수점 셀의 위치로 부드럽게 가로 스크롤 이동 (behavior: 'smooth')
+                    scrollBox.scrollTo({
+                        left: lastCell.offsetLeft - (scrollBox.clientWidth / 2) + (lastCell.clientWidth / 2),
+                        behavior: 'smooth'
+                    });
+                }
+                // 세로 스크롤도 항상 맨 아래로 내려가도록 처리
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }
+        }, 50); // 렌더링 안정성을 위한 미세한 딜레이
+        </script>
+        """
+        
+        # HTML과 스크립트를 동시에 렌더링
+        ca_container.markdown(full_wrapped_html + scroll_script, unsafe_allow_html=True)
+        
+        # 다음 스텝 계산 전에 0.3초 대기 (마지막 스텝 제외)
         if step < steps:
             time.sleep(0.3)
             state = collatz_ca_step(state)
