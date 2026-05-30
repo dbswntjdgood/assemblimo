@@ -156,8 +156,9 @@ if st.session_state.phase == 'input':
     with col1:
         num_input = st.number_input("10진법 정수 입력", min_value=0, value=9, step=1)
     with col2:
-        steps_input = st.number_input("계산할 스텝 수", min_value=1, value=20, step=1)
-        
+        # max_value=150 을 추가하여 최대 입력 가능한 스텝 수를 제한합니다.
+        steps_input = st.number_input("계산할 스텝 수", min_value=1, max_value=50, value=20, step=1)
+        st.caption("최대 50스텝까지 제한")        
     if st.button("실행", use_container_width=True):
         st.session_state.num = num_input
         st.session_state.steps = steps_input
