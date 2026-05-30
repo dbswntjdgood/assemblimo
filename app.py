@@ -154,26 +154,21 @@ if st.session_state.phase == 'input':
     
     col1, col2 = st.columns(2)
     with col1:
-        num_input = st.number_input("10진법 정수 입력", min_value=0, value=9, step=1)
+        num_input = st.number_input("10진법 정수 입력", min_value=0, value=27, step=1)
     with col2:
-        # max_value=150 을 추가하여 최대 입력 가능한 스텝 수를 제한합니다.
+        # max_value=150 설정을 통해 입력창 자체에서도 제한을 걸어둡니다.
         steps_input = st.number_input("계산할 스텝 수", min_value=1, max_value=50, value=20, step=1)
-        st.caption("최대 50스텝까지 제한")
-    # --- [추가] 스텝 수 초과 검사 및 경고 메시지 로직 ---
-    is_over_limit = steps_input > 150
+        
+    # --- [핵심] 스텝 수 한계치 검사 및 조건문 설정 ---
+    is_over_limit = steps_input > 50
     
     if is_over_limit:
-        st.warning("스텝 수 제한 초과: 브라우저 버벅임과 오류를 방지하기 위해 최대 50스텝까지만 계산할 수 있습니다. 값을 낮춰주세요.")
+        st.warning("스텝 수 제한 초과: 브라우저 과부하와 대형 연산 오류를 방지하기 위해 최대 50스텝까지만 계산할 수 있습니다. 값을 낮춰주세요.")
     else:
-        st.info("Tip: 숫자가 커질수록 버벅임이 늘어나므로 적절한 스텝 수를 입력하는 것이 좋습니다.")
-    # 경고 상태일 때는 버튼을 누르지 못하도록 disabled 설정을 걸어둠
+        st.info("Tip: 숫자가 커질수록 연산 공간이 늘어나므로 적절한 스텝 수를 입력하는 것이 좋습니다.")
+
+    # [수정] 중복 버튼 에러 원천 차단! 버튼은 단 하나만 두고, disabled 속성만 유연하게 바꿉니다.
     if st.button("실행", use_container_width=True, disabled=is_over_limit):
-        st.session_state.num = num_input
-        st.session_state.steps = steps_input
-        st.session_state.phase = 'conversion'
-        st.rerun()
-        
-    if st.button("실행", use_container_width=True):
         st.session_state.num = num_input
         st.session_state.steps = steps_input
         st.session_state.phase = 'conversion'
