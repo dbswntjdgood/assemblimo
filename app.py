@@ -151,19 +151,20 @@ if st.session_state.phase == 'input':
     with col1:
         num_input = st.number_input("10진법 정수 입력", min_value=0, value=27, step=1)
     with col2:
-        # 최대치를 50으로 고정
-        steps_input = st.number_input("계산할 스텝 수", min_value=1, max_value=50, value=20, step=1)
+        # [핵심 수정] max_value 속성을 제거하여 스트림릿이 멋대로 값을 20이나 50으로 바꾸는 독단(?)을 막습니다.
+        steps_input = st.number_input("계산할 스텝 수", min_value=1, value=20, step=1)
         
-    # [버그 수정] 확실하게 강제 검사하기 위해 50 초과 여부를 실시간 체크
+    # --- 우리가 직접 만든 강력한 50스텝 검문소 ---
     is_over_limit = steps_input > 50
     
     if is_over_limit:
-        st.error("🚨 **스텝 수 제한 초과:** 안정적인 시각화를 위해 최대 **50스텝**까지만 연산 가능합니다. 입력창에 값을 적은 후 **반드시 엔터(Enter)**를 눌러주세요!")
-        # 50을 넘어가면 아예 비활성화된 고정 버튼을 띄워 클릭을 원천 차단합니다.
+        # 사용자가 입력한 숫자가 그대로 유지되면서 빨간 에러창이 뜹니다.
+        st.error(f"🚨 **스텝 수 제한 초과:** 안정적인 시각화를 위해 최대 **50스텝**까지만 연산 가능합니다. 현재 입력값: {steps_input}")
+        # 버튼을 완전히 무력화된 비활성화 버전으로 바꿔치기합니다.
         st.button("실행 불가 (스텝 수 초과)", use_container_width=True, disabled=True, key="btn_disabled")
     else:
         st.info("💡 Tip: 숫자가 커질수록 연산 공간이 늘어나므로 적절한 스텝 수를 입력하는 것이 좋습니다.")
-        # 50 이하일 때만 정상 실행 가능한 버튼이 노출됩니다.
+        # 50 이하일 때만 정상적인 실행 버튼이 뜹니다.
         if st.button("실행", use_container_width=True, key="btn_enabled"):
             st.session_state.num = num_input
             st.session_state.steps = steps_input
