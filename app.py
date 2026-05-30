@@ -186,5 +186,5 @@ elif st.session_state.phase == 'ca_run':
         
         # 다음 스텝 계산 전에 0.5초 대기 (마지막 스텝 제외)
         if step < steps:
-            time.sleep(0.5)
+            time.sleep(0.1)
             state = collatz_ca_step(state)
