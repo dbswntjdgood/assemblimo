@@ -25,7 +25,6 @@ custom_css = """
     overflow-y: auto; /* [추가] 세로 스크롤도 컨테이너 내부에서 작동하도록 설정 */
     white-space: nowrap;
     padding-bottom: 15px;
-    scroll-behavior: smooth;
 }
 
 /* (선택사항) 가로 스크롤바를 조금 더 얇고 예쁘게 만들기 */
